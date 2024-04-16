@@ -1,0 +1,6 @@
+.ql-toolbar.ql-snow + .ql-container.ql-snow {
+  overflow: hidden !important;
+}
+.ql-container {
+  height: auto !important;
+}
