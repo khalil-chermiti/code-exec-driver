@@ -1,52 +1,94 @@
+import { useState } from "react";
 import { useCreateProblem } from "./useCreateProblem";
 import { CodeEditor } from "../../components/CodeEditor";
 import { RichTextEditor } from "../../components/richTextEditor";
+import { TestProblem } from "../../components/modal/TestProblem";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 export const CreateProblem = () => {
-  const { problem, handleProblemSubmit, setCodeTemplate, setDescription, setProblemName, setDriverCode } =
-    useCreateProblem();
+  const {
+    problem,
+    solution,
+    testCaseToDisplay,
+
+    executeCode,
+    setSolution,
+    setDriverCode,
+    setDescription,
+    setProblemName,
+    setCodeTemplate,
+    testCasesResult,
+    setTestCasesResult,
+    handleProblemSubmit,
+    setTestCaseToDisplay,
+  } = useCreateProblem();
+
+  const [toggle, setToggle] = useState(false);
 
   return (
     <div className="container mb-5 p-0">
       {/* Set Problem Name */}
-      <div className="row mb-3 mt-5">
+      <div className="row mb-3 mt-5 p-2">
         <h1 className="display-6">Problem name</h1>
         <input onChange={e => setProblemName(e.target.value)} type="text" className="form-control" id="name" />
       </div>
 
       {/* Add Problem Description */}
-      <div className="row mt-5">
+      <div className="row mt-5 p-2">
         <h1 className="display-6">Problem description</h1>
         <RichTextEditor description={problem.description} setDescription={setDescription} />
       </div>
 
-      <div className="row mt-5">
-        <div className="d-flex justify-content-between">
+      <PanelGroup style={{ height: "100vh" }} direction="vertical" className="mt-5">
+        <Panel defaultSize={50} minSize={20} className="border border-1 border-light p-1">
           <h1 className="display-6">code template</h1>
 
-          <div className="dropdown">
-            <button className="btn btn-dropdown dropdown-toggle" type="button">
-              Language
-            </button>
-            <ul className="dropdown-menu">
-              <li className="dropdown-item">javascript</li>
-            </ul>
-          </div>
-        </div>
+          {/* Add Code Template */}
+          <CodeEditor initialCodeTemplate={problem.code} setCode={setCodeTemplate} />
+        </Panel>
+        <PanelResizeHandle />
+        <Panel defaultSize={50} minSize={20} style={{ height: "300px" }}>
+          <PanelGroup direction="horizontal">
+            <Panel defaultSize={50} minSize={20} className="border border-1 border-light p-1">
+              {/* Add Test Cases */}
+              <h1 className="display-6">Test Cases</h1>
+              <CodeEditor initialCodeTemplate={problem.driverCode} setCode={setDriverCode} />
+            </Panel>
+            <PanelResizeHandle />
+            <Panel defaultSize={50} minSize={20} className="border border-1 border-light p-1">
+              {/* Add Solution */}
+              <h1 className="display-6">Solution</h1>
+              <CodeEditor initialCodeTemplate={solution} setCode={setSolution} />
+            </Panel>
+          </PanelGroup>
+        </Panel>
+      </PanelGroup>
+
+      <div className="d-flex justify-content-between">
+        <button onClick={handleProblemSubmit} className="btn btn-success mt-3" type="button">
+          Create Problem
+        </button>
+
+        <button
+          onClick={() => {
+            executeCode();
+            setToggle(!toggle);
+          }}
+          className="btn btn-primary mt-3"
+          type="button"
+        >
+          test problem
+        </button>
       </div>
 
-      {/* Add Code Template */}
-      <CodeEditor initialCodeTemplate="" setCode={setCodeTemplate} />
-
-      {/* Add Problem Driver Code */}
-      <div className="row mt-5">
-        <h1 className="display-6">Problem Driver Code</h1>
-      </div>
-      <CodeEditor initialCodeTemplate="" setCode={setDriverCode} />
-
-      <button onClick={handleProblemSubmit} className="btn btn-primary mt-3" type="button">
-        Create Problem
-      </button>
+      <TestProblem
+        isToggle={toggle}
+        testCaseToDisplay={testCaseToDisplay}
+        testCasesResultView={testCasesResult}
+        handleToggle={() => setToggle(!toggle)}
+        setTestCaseToDisplay={setTestCaseToDisplay}
+        clearTestCasesResult={() => setTestCasesResult({ codeSubmitResult: "initial" })}
+      />
     </div>
   );
 };

@@ -13,7 +13,7 @@ export type TestCases = {
 export type Problem = {
   name: string;
   description: string;
-  codeTemplate: string;
+  code: string;
   driverCode: string;
 };
 
@@ -37,8 +37,6 @@ const problemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-
-  type: String,
 });
 
 export const ProblemModel = mongoose.model("problem", problemSchema);

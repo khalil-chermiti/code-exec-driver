@@ -18,7 +18,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ setCode, initialCodeTemp
           if (code) setCode(code);
         }}
         value={initialCodeTemplate}
-        height="50vh"
+        height="100vh"
         language="javascript"
       />
     </div>

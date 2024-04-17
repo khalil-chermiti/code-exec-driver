@@ -1,13 +1,22 @@
+import axios from "axios";
 import { useState } from "react";
-import { Problem } from "../../types";
+import { CodeSubmitResultResponse, CodeSubmitResultView, Problem, ResponseResult, TestCaseResult } from "../../types";
 
 export const useCreateProblem = () => {
+  const [testCasesResult, setTestCasesResult] = useState<CodeSubmitResultView>({
+    codeSubmitResult: "initial",
+  });
+
   const [problem, setProblem] = useState<Problem>({
     name: "",
     description: "",
-    code: "",
-    driverCode: "",
+    code: "// write your code here",
+    driverCode: "// write your code here",
   });
+
+  const [solution, setSolution] = useState<string>("// write your solution here");
+
+  const [testCaseToDisplay, setTestCaseToDisplay] = useState<TestCaseResult | null>(null);
 
   const setDescription = (description: string) => {
     setProblem(prev => ({ ...prev, description }));
@@ -26,30 +35,62 @@ export const useCreateProblem = () => {
   };
 
   const handleProblemSubmit = async () => {
-    console.log(problem);
-    const res = await fetch("http://localhost:3000/add-problem", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const res = (
+      await axios.post("http://localhost:3000/add-problem", {
         name: problem.name,
         description: problem.description,
         code: problem.code,
         driverCode: problem.driverCode,
-      }),
-    });
+      })
+    ).data;
 
-    const data = await res.json();
-    console.log(data);
+    if (res.success) {
+      alert("Problem added successfully");
+    } else {
+      alert("Error adding problem");
+    }
+  };
+
+  const executeCode = async () => {
+    console.log({
+      solution: solution,
+      driver: problem.driverCode,
+    });
+    const res = (
+      await axios.post<ResponseResult<CodeSubmitResultResponse>>(`http://localhost:3000/test-problem`, {
+        code: solution,
+        driver: problem.driverCode,
+      })
+    ).data;
+
+    if (res.success)
+      switch (res.data.codeSubmitResult) {
+        case "exception":
+          setTestCasesResult({ codeSubmitResult: "exception", errorMessage: res.data.errorMessage });
+          break;
+        case "success":
+          setTestCasesResult({ codeSubmitResult: "success", testCases: res.data.testCases });
+          setTestCaseToDisplay(res.data.testCases[0]);
+          break;
+      }
+
+    console.log(res);
   };
 
   return {
     problem,
+    solution,
+    testCasesResult,
+    testCaseToDisplay,
+
+    executeCode,
+    setSolution,
+    setDriverCode,
     setDescription,
     setProblemName,
     setCodeTemplate,
-    setDriverCode,
+    setTestCasesResult,
     handleProblemSubmit,
+    setTestCaseToDisplay,
   };
 };

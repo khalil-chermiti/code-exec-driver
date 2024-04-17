@@ -1,51 +1,13 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-type FetchedProblem = {
-  id: string;
-  name: string;
-  description: string;
-  code: string;
-};
-
-type TestCaseFailed = {
-  executionResult: "failed";
-  input: { input: string }[];
-  expected: string;
-  output: string;
-};
-
-type TestCasePassed = {
-  executionResult: "passed";
-  input: { input: string }[];
-  expected: string;
-  output: string;
-};
-
-type TestCaseResult = TestCaseFailed | TestCasePassed;
-
-type CodeSubmitResultView =
-  | {
-      codeSubmitResult: "initial";
-    }
-  | {
-      codeSubmitResult: "success";
-      testCases: TestCaseResult[];
-    }
-  | {
-      codeSubmitResult: "exception";
-      errorMessage: string;
-    };
-
-type CodeSubmitResultResponse =
-  | {
-      codeSubmitResult: "success";
-      testCases: TestCaseResult[];
-    }
-  | {
-      codeSubmitResult: "exception";
-      errorMessage: string;
-    };
+import {
+  CodeSubmitResultResponse,
+  CodeSubmitResultView,
+  FetchedProblem,
+  ResponseResult,
+  TestCaseResult,
+} from "../../types";
 
 export const useSolveProblem = () => {
   const { problemId } = useParams();
@@ -73,38 +35,36 @@ export const useSolveProblem = () => {
   });
 
   const getProblem = async () => {
-    fetch("http://localhost:3000/get-problem/" + problemId)
-      .then(res => res.json())
-      .then(data => {
-        console.log(data);
-        setCode(data.code);
-        setProblem(data);
-      });
+    const fetchedProblem = (
+      await axios.get<ResponseResult<FetchedProblem>>(`http://localhost:3000/get-problem/${problemId}`)
+    ).data;
+
+    if (fetchedProblem.success) {
+      console.log(fetchedProblem.data);
+      setCode(fetchedProblem.data.code);
+      setProblem(fetchedProblem.data);
+    } else {
+      console.log(fetchedProblem.message);
+    }
   };
 
   const submitCode = async () => {
-    const res = await fetch("http://localhost:3000/execute", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const res = (
+      await axios.post<ResponseResult<CodeSubmitResultResponse>>("http://localhost:3000/execute", {
         code,
         problemId,
-      }),
-    });
+      })
+    ).data;
 
-    const data = (await res.json()) as CodeSubmitResultResponse;
+    if (res.success) {
+      if (res.data.codeSubmitResult === "exception") {
+        setException(res.data.errorMessage);
+      }
 
-    if (data.codeSubmitResult === "exception") {
-      setException(data.errorMessage);
+      if (res.data.codeSubmitResult === "success") {
+        setTestCases(res.data.testCases);
+      }
     }
-
-    if (data.codeSubmitResult === "success") {
-      setTestCases(data.testCases);
-    }
-
-    console.log(data);
   };
 
   useEffect(() => {

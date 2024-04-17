@@ -1,4 +1,4 @@
-export type CodeExecutionResult = {
+export type PistonCodeExecutionResult = {
   version: string;
 
   compile: {
@@ -48,3 +48,28 @@ export type CodeSubmitResult =
       codeSubmitResult: "exception";
       errorMessage: string;
     };
+
+export type ProblemViewModel = {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+};
+
+type SuccessResponse<T> = {
+  data: T;
+  message: string;
+  status: number;
+  success: true;
+};
+
+type ErrorResponse = {
+  message: string;
+  status: number;
+  success: false;
+};
+
+/** this generic type is used to define the response of an api call
+ * it takes a generic type T which is the type of the data returned by the api
+ */
+export type ResponseResult<T> = SuccessResponse<T> | ErrorResponse;

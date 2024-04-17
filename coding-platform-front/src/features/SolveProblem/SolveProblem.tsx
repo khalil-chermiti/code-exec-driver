@@ -155,7 +155,7 @@ export const SolveProblem = () => {
                           type="text"
                           id="disabledTextInput"
                           className="form-control"
-                          value={input.input}
+                          value={input}
                           readOnly
                         />
                       </div>

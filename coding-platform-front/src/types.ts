@@ -44,14 +44,6 @@ export type TestCases = {
   output: string;
 };
 
-export type FetchedProblem = {
-  _id: string;
-  name: string;
-  description: string;
-  codeTemplates: CodeTemplate[];
-  testCases: TestCases[];
-};
-
 export type TestCaseDisplay = {
   input: string[];
   output: string;
@@ -80,3 +72,67 @@ export type TestCasesResultsTab =
     };
 
 export type Tab = "TEST_CASES" | "TEST_RESULTS";
+
+type SuccessResponse<T> = {
+  data: T;
+  message: string;
+  status: number;
+  success: true;
+};
+
+type ErrorResponse = {
+  message: string;
+  status: number;
+  success: false;
+};
+
+/** this generic type is used to define the response of an api call
+ * it takes a generic type T which is the type of the data returned by the api
+ */
+export type ResponseResult<T> = SuccessResponse<T> | ErrorResponse;
+
+export type FetchedProblem = {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+};
+
+export type TestCaseFailed = {
+  executionResult: "failed";
+  input: string[];
+  expected: string;
+  output: string;
+};
+
+export type TestCasePassed = {
+  executionResult: "passed";
+  input: string[];
+  expected: string;
+  output: string;
+};
+
+export type TestCaseResult = TestCaseFailed | TestCasePassed;
+
+export type CodeSubmitResultView =
+  | {
+      codeSubmitResult: "initial";
+    }
+  | {
+      codeSubmitResult: "success";
+      testCases: TestCaseResult[];
+    }
+  | {
+      codeSubmitResult: "exception";
+      errorMessage: string;
+    };
+
+export type CodeSubmitResultResponse =
+  | {
+      codeSubmitResult: "success";
+      testCases: TestCaseResult[];
+    }
+  | {
+      codeSubmitResult: "exception";
+      errorMessage: string;
+    };

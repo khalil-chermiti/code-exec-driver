@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ResponseResult } from "../../types";
 
 type ProblemListing = {
   id: string;
@@ -13,8 +14,9 @@ export const ListProblems = () => {
   const [problems, setProblems] = useState<ProblemListing[]>([]);
 
   const getProblems = async () => {
-    const response = await axios.get<ProblemListing[]>("http://localhost:3000/get-problems");
-    setProblems(response.data);
+    const response = (await axios.get<ResponseResult<ProblemListing[]>>("http://localhost:3000/get-problems")).data;
+    if (response.success) setProblems(response.data);
+    else console.log("Error fetching problems");
   };
 
   useEffect(() => {
