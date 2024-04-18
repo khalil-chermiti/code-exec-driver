@@ -107,7 +107,7 @@ export const TestProblem: React.FC<ModalProps> = ({
                           type="text"
                           id="disabledTextInput"
                           className="form-control"
-                          value={input}
+                          value={JSON.stringify(input)}
                           readOnly
                         />
                       </div>
@@ -140,6 +140,14 @@ export const TestProblem: React.FC<ModalProps> = ({
                     />
                   </div>
                 </fieldset>
+              )}
+
+              {testCasesResultView.codeSubmitResult === "initial" && (
+                <div className="d-flex justify-content-center">
+                  <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
               )}
             </div>
           </div>

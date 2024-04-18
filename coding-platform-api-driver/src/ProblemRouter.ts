@@ -170,7 +170,8 @@ problemRouter.post(
         message: "Code Execution Successfully Finished",
         data: {
           codeSubmitResult: "exception",
-          errorMessage: pistonExecutionResponse.data.run.stdout,
+          errorMessage:
+            pistonExecutionResponse.data.run.stdout || "No Returned Value!",
         },
       });
     }
@@ -240,7 +241,8 @@ problemRouter.post(
         message: "Code Execution Successfully Finished",
         data: {
           codeSubmitResult: "exception",
-          errorMessage: pistonExecutionResponse.data.run.stdout,
+          errorMessage:
+            pistonExecutionResponse.data.run.stdout || "No Returned Value!",
         },
       });
     }

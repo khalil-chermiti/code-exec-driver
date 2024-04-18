@@ -52,16 +52,13 @@ export const useCreateProblem = () => {
   };
 
   const executeCode = async () => {
-    console.log({
-      solution: solution,
-      driver: problem.driverCode,
-    });
     const res = (
       await axios.post<ResponseResult<CodeSubmitResultResponse>>(`http://localhost:3000/test-problem`, {
         code: solution,
         driver: problem.driverCode,
       })
     ).data;
+    console.log(res);
 
     if (res.success)
       switch (res.data.codeSubmitResult) {
@@ -73,8 +70,7 @@ export const useCreateProblem = () => {
           setTestCaseToDisplay(res.data.testCases[0]);
           break;
       }
-
-    console.log(res);
+    else setTestCasesResult({ codeSubmitResult: "exception", errorMessage: res.message });
   };
 
   return {

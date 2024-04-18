@@ -40,15 +40,16 @@ export const useSolveProblem = () => {
     ).data;
 
     if (fetchedProblem.success) {
-      console.log(fetchedProblem.data);
       setCode(fetchedProblem.data.code);
       setProblem(fetchedProblem.data);
     } else {
-      console.log(fetchedProblem.message);
     }
   };
 
   const submitCode = async () => {
+    setTestCases([]);
+    setTestCaseToDisplay(null);
+
     const res = (
       await axios.post<ResponseResult<CodeSubmitResultResponse>>("http://localhost:3000/execute", {
         code,
@@ -58,11 +59,14 @@ export const useSolveProblem = () => {
 
     if (res.success) {
       if (res.data.codeSubmitResult === "exception") {
+        console.log(res.data.errorMessage);
         setException(res.data.errorMessage);
       }
 
       if (res.data.codeSubmitResult === "success") {
         setTestCases(res.data.testCases);
+        console.log(res.data);
+        setTestCaseToDisplay(res.data.testCases[0]);
       }
     }
   };

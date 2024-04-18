@@ -10,7 +10,7 @@ export const SolveProblem = () => {
   return (
     <div>
       <div
-        className="w-auto d-flex justify-content-between align-items-center p-1"
+        className="w-auto d-flex justify-content-between align-items-center p-1 border border-1 border-light p-1"
         style={{
           backgroundColor: "#f0f0f0",
           borderRadius: "3px",
@@ -21,10 +21,23 @@ export const SolveProblem = () => {
 
         <p className="display-6">{problem?.name}</p>
 
-        <span></span>
+        <span>
+          <button
+            onClick={submitCode}
+            className="btn btn-success"
+            style={{
+              backgroundColor: "#4CAF50",
+              color: "white",
+              borderRadius: "3px",
+            }}
+          >
+            Submit
+          </button>
+        </span>
       </div>
       <PanelGroup direction="horizontal">
         <Panel
+          className="border border-1 border-light p-1"
           style={{
             overflow: "scroll",
             overflowX: "hidden",
@@ -42,11 +55,10 @@ export const SolveProblem = () => {
           <PanelGroup direction="vertical">
             {/* Code Editor */}
             <Panel
+              className="border border-1 border-light p-1"
               style={{
                 margin: "2px",
                 backgroundColor: "white",
-                height: `${codeSubmitResult.codeSubmitResult === "initial" ? "90vh" : "45vh"}`,
-                flex: `${codeSubmitResult.codeSubmitResult === "initial" ? "9" : "5"}`,
                 overflow: "hidden",
                 overflowX: "hidden",
                 border: "2px solid #f0f0f0",
@@ -64,36 +76,25 @@ export const SolveProblem = () => {
             <PanelResizeHandle />
 
             <Panel
+              className="border border-1 border-light p-1"
+              defaultSize={30}
               style={{
                 overflow: "scroll",
                 overflowX: "hidden",
                 // height: "45vh",
-                height: `${codeSubmitResult.codeSubmitResult === "initial" ? "0vh" : "45vh"}`,
-                flex: `${codeSubmitResult.codeSubmitResult === "initial" ? "1" : "5"}`,
                 margin: "2px",
                 backgroundColor: "#f0f0f0",
                 borderRadius: "3px",
                 padding: "10px",
               }}
             >
-              <div className="w-auto d-flex justify-content-end align-items-center mb-2">
-                <button
-                  onClick={submitCode}
-                  className="btn btn-success"
-                  style={{
-                    backgroundColor: "#4CAF50",
-                    color: "white",
-                    borderRadius: "3px",
-                  }}
-                >
-                  Submit
-                </button>
-              </div>
-
-              <div className="border-top border-light border-1 my-2"></div>
-
               <div className="mb-2">
                 {/* Render Test Cases Results Button */}
+                {codeSubmitResult.codeSubmitResult === "initial" && (
+                  <div className={`alert alert-info center`} role="alert" style={{ borderRadius: "5px" }}>
+                    Submit Your First Attempt
+                  </div>
+                )}
                 {codeSubmitResult.codeSubmitResult === "success" &&
                   codeSubmitResult.testCases.map((testCase, index) => (
                     <button
@@ -155,7 +156,7 @@ export const SolveProblem = () => {
                           type="text"
                           id="disabledTextInput"
                           className="form-control"
-                          value={input}
+                          value={JSON.stringify(input)}
                           readOnly
                         />
                       </div>

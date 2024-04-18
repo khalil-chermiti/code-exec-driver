@@ -16,7 +16,6 @@ export const ListProblems = () => {
   const getProblems = async () => {
     const response = (await axios.get<ResponseResult<ProblemListing[]>>("http://localhost:3000/get-problems")).data;
     if (response.success) setProblems(response.data);
-    else console.log("Error fetching problems");
   };
 
   useEffect(() => {
