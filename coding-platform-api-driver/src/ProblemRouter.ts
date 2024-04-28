@@ -27,6 +27,7 @@ problemRouter.post(
           name: problem.name,
           description: problem.description,
           code: problem.code,
+          driverCode: problem.driverCode,
         },
       });
     } catch {
@@ -50,6 +51,7 @@ problemRouter.get(
           name: problem.name,
           code: problem.code,
           description: problem.description,
+          driverCode: problem.driverCode,
         };
       });
 
@@ -98,6 +100,7 @@ problemRouter.get(
           name: problem.name,
           code: problem.code,
           description: problem.description,
+          driverCode: problem.driverCode,
         },
       });
     } catch {
@@ -141,6 +144,7 @@ problemRouter.post(
     }
 
     const mergedCode = JsCodeDriverFactory(code, problem.driverCode)();
+    console.log(mergedCode);
 
     const pistonExecutionResponse = await pistonExecuteCodeApi(mergedCode);
 
@@ -265,6 +269,76 @@ problemRouter.post(
         message:
           "STDOUT is not a valid JSON " +
           pistonExecutionResponse.data.run.stdout,
+        status: HttpStatusCode.InternalServerError,
+      });
+    }
+  },
+);
+
+problemRouter.put(
+  API_ENDPOINTS.UPDATE_PROBLEM,
+  async (req: Request, res: Response<ResponseResult<ProblemViewModel>>) => {
+    if (!req.params.id)
+      return res.status(HttpStatusCode.BadRequest).json({
+        success: false,
+        status: HttpStatusCode.BadRequest,
+        message: "Please Provide Problem's Id",
+      });
+
+    if (
+      !req.body.name ||
+      !req.body.code ||
+      !req.body.description ||
+      !req.body.driverCode
+    ) {
+      return res.status(HttpStatusCode.BadRequest).json({
+        success: false,
+        status: HttpStatusCode.BadRequest,
+        message:
+          "Please Provide Problem's Name, Code, Description and Driver Code",
+      });
+    }
+
+    try {
+      const problem = await ProblemModel.findById(req.params.id);
+
+      if (!problem)
+        return res.status(HttpStatusCode.BadRequest).json({
+          success: false,
+          status: HttpStatusCode.BadRequest,
+          message: "Unable To Find Problem With The Specified Id",
+        });
+
+      const updatedProblem = await ProblemModel.findByIdAndUpdate(
+        { _id: req.params.id },
+        {
+          name: req.body.name,
+          code: req.body.code,
+          description: req.body.description,
+          driverCode: req.body.driverCode,
+        },
+        {
+          new: true,
+        },
+      );
+
+      if (updatedProblem)
+        return res.status(HttpStatusCode.Ok).json({
+          success: true,
+          status: HttpStatusCode.Ok,
+          message: "Problem Updated Successfully",
+          data: {
+            id: updatedProblem._id.toString(),
+            name: updatedProblem.name,
+            code: updatedProblem.code,
+            description: updatedProblem.description,
+            driverCode: updatedProblem.driverCode,
+          },
+        });
+    } catch (e) {
+      return res.status(HttpStatusCode.InternalServerError).json({
+        success: false,
+        message: "Failed To Fetch Problems",
         status: HttpStatusCode.InternalServerError,
       });
     }

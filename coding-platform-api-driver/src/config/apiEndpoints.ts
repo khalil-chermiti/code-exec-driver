@@ -7,8 +7,9 @@ export const API_ENDPOINTS = {
     DB_NAME: process.env.MONGO_DB,
   },
   GET_PROBLEM: "/get-problem/:id",
-  ADD_PROBLEM: "/add-problem",
+  ADD_PROBLEM: "/create-problem",
   GET_PROBLEMS: "/get-problems",
   EXECUTE_CODE: "/execute",
-  TEST_PROBLEM: "/test-problem"
+  TEST_PROBLEM: "/test-problem",
+  UPDATE_PROBLEM: "/update-problem/:id",
 };

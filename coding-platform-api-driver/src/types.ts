@@ -54,6 +54,7 @@ export type ProblemViewModel = {
   name: string;
   description: string;
   code: string;
+  driverCode: string;
 };
 
 type SuccessResponse<T> = {
