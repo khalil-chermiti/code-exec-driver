@@ -12,4 +12,7 @@ export const API_ENDPOINTS = {
   EXECUTE_CODE: "/execute",
   TEST_PROBLEM: "/test-problem",
   UPDATE_PROBLEM: "/update-problem/:id",
+  SEARCH_PROBLEM: "/search-problem",
+  SEARCH_PROBLEMS_BY_IDS: "/search-problems",
+  GET_PROBLEMS_BY_IDS: "/get-problems-by-ids",
 };
