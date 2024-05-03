@@ -1,9 +1,10 @@
 import cors from "cors";
 
+const origins = ["http://localhost:3000", "http://localhost:5000"];
+
 export const corsConfigFactory = () => {
-  const origin = process.env.CORS_ORIGIN || "http://localhost:5173";
   return cors({
-    origin: [origin , "http://localhost:5000"],
+    origin: origins,
     credentials: true,
   });
 };

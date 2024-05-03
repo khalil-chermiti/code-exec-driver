@@ -24,7 +24,7 @@ app.use(GlobalErrorHandler);
 const bootstrapServer = async () => {
   await connectToDB();
 
-  app.listen(3000, () => {
+  app.listen(process.env.PORT, () => {
     logger.info("Server is running on port " + process.env.PORT + " 🚀");
   });
 };
