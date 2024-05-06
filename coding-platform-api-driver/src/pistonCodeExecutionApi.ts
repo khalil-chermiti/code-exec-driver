@@ -24,13 +24,15 @@ export const pistonExecuteCodeApi = async (code: string): Promise<ResponseResult
         },
       ],
     });
+
     return {
       success: true,
       message: "Code Execution Finished Successfully",
       status: HttpStatusCode.Ok,
       data: response.data,
     };
-  } catch {
+  } catch(e) {
+    console.log(e)
     return {
       success: false,
       message: "Code Execution Failed",

@@ -5,7 +5,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node-esm src/server.ts"
+    "dev": "nodemon --exec ts-node-esm src/server.ts",
+    "deve": "nodemon --exec node --no-warnings=ExperimentalWarning --loader ts-node/esm ./src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +22,8 @@
     "mongoose": "^8.2.1",
     "morgan": "^1.10.0",
     "pino": "^8.20.0",
-    "pino-pretty": "^11.0.0"
+    "pino-pretty": "^11.0.0",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
