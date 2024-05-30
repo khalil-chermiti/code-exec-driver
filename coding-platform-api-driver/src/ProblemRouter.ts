@@ -4,100 +4,115 @@ import { ProblemModel } from "./model/problemSchema.js";
 import { API_ENDPOINTS } from "./config/apiEndpoints.js";
 import { JsCodeDriverFactory } from "./drivers/jsDriver.js";
 import { pistonExecuteCodeApi } from "./pistonCodeExecutionApi.js";
-import { CodeSubmitResult, ProblemViewModel, ResponseResult, TestCaseResult } from "./types.js";
+import {
+  CodeSubmitResult,
+  ProblemViewModel,
+  ResponseResult,
+  TestCaseResult,
+} from "./types.js";
+import { isValidObjectId } from "mongoose";
 
 export const problemRouter = express.Router();
 
-problemRouter.post(API_ENDPOINTS.ADD_PROBLEM, async (req: Request, res: Response<ResponseResult<ProblemViewModel>>) => {
-  try {
-    const problem = await ProblemModel.create(req.body);
-    return res.json({
-      success: true,
-      message: "Problem Created Successfully",
-      status: HttpStatusCode.Ok,
-      data: {
-        id: problem._id.toString(),
-        name: problem.name,
-        description: problem.description,
-        code: problem.code,
-        driverCode: problem.driverCode,
-      },
-    });
-  } catch {
-    return res.status(HttpStatusCode.BadRequest).json({
-      success: false,
-      message: "Error while creating problem",
-      status: HttpStatusCode.BadRequest,
-    });
-  }
-});
+problemRouter.post(
+  API_ENDPOINTS.ADD_PROBLEM,
+  async (req: Request, res: Response<ResponseResult<ProblemViewModel>>) => {
+    try {
+      const problem = await ProblemModel.create(req.body);
+      return res.json({
+        success: true,
+        message: "Problem Created Successfully",
+        status: HttpStatusCode.Ok,
+        data: {
+          id: problem._id.toString(),
+          name: problem.name,
+          description: problem.description,
+          code: problem.code,
+          driverCode: problem.driverCode,
+        },
+      });
+    } catch {
+      return res.status(HttpStatusCode.BadRequest).json({
+        success: false,
+        message: "Error while creating problem",
+        status: HttpStatusCode.BadRequest,
+      });
+    }
+  },
+);
 
-problemRouter.get(API_ENDPOINTS.GET_PROBLEMS, async (_: Request, res: Response<ResponseResult<ProblemViewModel[]>>) => {
-  try {
-    const problems = await ProblemModel.find();
-    const problemsList: ProblemViewModel[] = problems.map(problem => {
-      return {
-        id: problem._id.toString(),
-        name: problem.name,
-        code: problem.code,
-        description: problem.description,
-        driverCode: problem.driverCode,
-      };
-    });
+problemRouter.get(
+  API_ENDPOINTS.GET_PROBLEMS,
+  async (_: Request, res: Response<ResponseResult<ProblemViewModel[]>>) => {
+    try {
+      const problems = await ProblemModel.find();
+      const problemsList: ProblemViewModel[] = problems.map((problem) => {
+        return {
+          id: problem._id.toString(),
+          name: problem.name,
+          code: problem.code,
+          description: problem.description,
+          driverCode: problem.driverCode,
+        };
+      });
 
-    return res.json({
-      success: true,
-      status: HttpStatusCode.Ok,
-      message: "Fetched All Available Problems Successfully",
-      data: problemsList,
-    });
-  } catch {
-    return res.json({
-      success: false,
-      message: "Failed To Fetch Problems List",
-      status: HttpStatusCode.InternalServerError,
-    });
-  }
-});
+      return res.json({
+        success: true,
+        status: HttpStatusCode.Ok,
+        message: "Fetched All Available Problems Successfully",
+        data: problemsList,
+      });
+    } catch {
+      return res.json({
+        success: false,
+        message: "Failed To Fetch Problems List",
+        status: HttpStatusCode.InternalServerError,
+      });
+    }
+  },
+);
 
-problemRouter.get(API_ENDPOINTS.GET_PROBLEM, async (req: Request, res: Response<ResponseResult<ProblemViewModel>>) => {
-  if (!req.params.id)
-    return res.status(HttpStatusCode.BadRequest).json({
-      success: false,
-      status: HttpStatusCode.BadRequest,
-      message: "Please Provide Problem's Id",
-    });
-
-  try {
-    const problem = await ProblemModel.findById(req.params.id);
-
-    if (!problem)
+problemRouter.get(
+  API_ENDPOINTS.GET_PROBLEM,
+  async (req: Request, res: Response<ResponseResult<ProblemViewModel>>) => {
+    if (!req.params.id)
       return res.status(HttpStatusCode.BadRequest).json({
         success: false,
         status: HttpStatusCode.BadRequest,
-        message: "Unable To Find Problem With The Specified Id",
+        message: "Please Provide Problem's Id",
       });
 
-    return res.status(HttpStatusCode.Ok).json({
-      success: true,
-      status: HttpStatusCode.Ok,
-      message: "Problem Fetched Successfully",
-      data: {
-        id: problem._id.toString(),
-        name: problem.name,
-        code: problem.code,
-        description: problem.description,
-        driverCode: problem.driverCode,
-      },
-    });
-  } catch {
-    return res.status(HttpStatusCode.InternalServerError).json({
-      success: false,
-      message: "Failed To Fetch Problems",
-      status: HttpStatusCode.InternalServerError,
-    });
-  }
-});
+    try {
+      const problem = await ProblemModel.findById(req.params.id);
+
+      if (!problem)
+        return res.status(HttpStatusCode.BadRequest).json({
+          success: false,
+          status: HttpStatusCode.BadRequest,
+          message: "Unable To Find Problem With The Specified Id",
+        });
+
+      return res.status(HttpStatusCode.Ok).json({
+        success: true,
+        status: HttpStatusCode.Ok,
+        message: "Problem Fetched Successfully",
+        data: {
+          id: problem._id.toString(),
+          name: problem.name,
+          code: problem.code,
+          description: problem.description,
+          driverCode: problem.driverCode,
+        },
+      });
+    } catch {
+      return res.status(HttpStatusCode.InternalServerError).json({
+        success: false,
+        message: "Failed To Fetch Problems",
+        status: HttpStatusCode.InternalServerError,
+      });
+    }
+  },
+);
 ("");
 
 problemRouter.post(
@@ -130,7 +145,6 @@ problemRouter.post(
     }
 
     const mergedCode = JsCodeDriverFactory(code, problem.driverCode)();
-    console.log(mergedCode);
 
     const pistonExecutionResponse = await pistonExecuteCodeApi(mergedCode);
 
@@ -160,7 +174,8 @@ problemRouter.post(
         message: "Code Execution Successfully Finished",
         data: {
           codeSubmitResult: "exception",
-          errorMessage: pistonExecutionResponse.data.run.stdout || "No Returned Value!",
+          errorMessage:
+            pistonExecutionResponse.data.run.stdout || "No Returned Value!",
         },
       });
     }
@@ -184,7 +199,7 @@ problemRouter.post(
         status: HttpStatusCode.InternalServerError,
       });
     }
-  }
+  },
 );
 
 problemRouter.post(
@@ -192,7 +207,7 @@ problemRouter.post(
   async (req: Request, res: Response<ResponseResult<CodeSubmitResult>>) => {
     const code = req.body.code;
     const driver = req.body.driver;
-    
+
     if (!code || !driver)
       return res.status(HttpStatusCode.BadRequest).json({
         success: false,
@@ -201,9 +216,8 @@ problemRouter.post(
       });
 
     const mergedCode = JsCodeDriverFactory(code, driver)();
-    
-    const pistonExecutionResponse = await pistonExecuteCodeApi(mergedCode);
 
+    const pistonExecutionResponse = await pistonExecuteCodeApi(mergedCode);
 
     if (pistonExecutionResponse.success === false)
       return res.status(HttpStatusCode.InternalServerError).json({
@@ -231,7 +245,8 @@ problemRouter.post(
         message: "Code Execution Successfully Finished",
         data: {
           codeSubmitResult: "exception",
-          errorMessage: pistonExecutionResponse.data.run.stdout || "No Returned Value!",
+          errorMessage:
+            pistonExecutionResponse.data.run.stdout || "No Returned Value!",
         },
       });
     }
@@ -251,11 +266,13 @@ problemRouter.post(
     } catch (e) {
       return res.json({
         success: false,
-        message: "STDOUT is not a valid JSON " + pistonExecutionResponse.data.run.stdout,
+        message:
+          "STDOUT is not a valid JSON " +
+          pistonExecutionResponse.data.run.stdout,
         status: HttpStatusCode.InternalServerError,
       });
     }
-  }
+  },
 );
 
 problemRouter.put(
@@ -268,11 +285,17 @@ problemRouter.put(
         message: "Please Provide Problem's Id",
       });
 
-    if (!req.body.name || !req.body.code || !req.body.description || !req.body.driverCode) {
+    if (
+      !req.body.name ||
+      !req.body.code ||
+      !req.body.description ||
+      !req.body.driverCode
+    ) {
       return res.status(HttpStatusCode.BadRequest).json({
         success: false,
         status: HttpStatusCode.BadRequest,
-        message: "Please Provide Problem's Name, Code, Description and Driver Code",
+        message:
+          "Please Provide Problem's Name, Code, Description and Driver Code",
       });
     }
 
@@ -296,7 +319,7 @@ problemRouter.put(
         },
         {
           new: true,
-        }
+        },
       );
 
       if (updatedProblem)
@@ -319,12 +342,15 @@ problemRouter.put(
         status: HttpStatusCode.InternalServerError,
       });
     }
-  }
+  },
 );
 
 problemRouter.post(
   API_ENDPOINTS.SEARCH_PROBLEM,
-  async (req: Request, res: Response<ResponseResult<{ id: string; name: string }[]>>) => {
+  async (
+    req: Request,
+    res: Response<ResponseResult<{ id: string; name: string }[]>>,
+  ) => {
     if (!req.body.search)
       return res.status(HttpStatusCode.BadRequest).json({
         success: false,
@@ -337,7 +363,7 @@ problemRouter.post(
         name: { $regex: req.body.search, $options: "i" },
       });
 
-      const problemsList = problems.map(problem => {
+      const problemsList = problems.map((problem) => {
         return {
           id: problem._id.toString(),
           name: problem.name,
@@ -347,7 +373,10 @@ problemRouter.post(
       return res.json({
         success: true,
         status: HttpStatusCode.Ok,
-        message: "Fetched All Available Problems With The Search Query " + req.body.search + " Successfully",
+        message:
+          "Fetched All Available Problems With The Search Query " +
+          req.body.search +
+          " Successfully",
         data: problemsList,
       });
     } catch {
@@ -357,7 +386,7 @@ problemRouter.post(
         status: HttpStatusCode.InternalServerError,
       });
     }
-  }
+  },
 );
 
 problemRouter.post(
@@ -376,16 +405,20 @@ problemRouter.post(
       });
 
       // make sure all ids are valid
-      const nonExistingIds = problems.filter(problem => !req.body.ids.includes(problem._id.toString()));
+      const nonExistingIds = problems.filter(
+        (problem) => !req.body.ids.includes(problem._id.toString()),
+      );
 
       if (nonExistingIds.length > 0)
         return res.status(HttpStatusCode.BadRequest).json({
           success: false,
           status: HttpStatusCode.BadRequest,
-          message: "Some of the ids are invalid" + nonExistingIds.map(problem => problem._id.toString()).join(", "),
+          message:
+            "Some of the ids are invalid" +
+            nonExistingIds.map((problem) => problem._id.toString()).join(", "),
         });
 
-      const problemsList: ProblemViewModel[] = problems.map(problem => {
+      const problemsList: ProblemViewModel[] = problems.map((problem) => {
         return {
           id: problem._id.toString(),
           name: problem.name,
@@ -398,7 +431,10 @@ problemRouter.post(
       return res.json({
         success: true,
         status: HttpStatusCode.Ok,
-        message: "Fetched All Available Problems With The Search Query " + req.body.ids + " Successfully",
+        message:
+          "Fetched All Available Problems With The Search Query " +
+          req.body.ids +
+          " Successfully",
         data: problemsList,
       });
     } catch {
@@ -408,7 +444,7 @@ problemRouter.post(
         status: HttpStatusCode.InternalServerError,
       });
     }
-  }
+  },
 );
 
 problemRouter.post(
@@ -427,7 +463,7 @@ problemRouter.post(
       });
 
       // make sure all ids are valid
-      const problemsList = problems.map(problem => {
+      const problemsList = problems.map((problem) => {
         return {
           id: problem._id.toString(),
           name: problem.name,
@@ -440,7 +476,10 @@ problemRouter.post(
       return res.json({
         success: true,
         status: HttpStatusCode.Ok,
-        message: "Fetched All Available Problems With The Search Query " + req.body.ids + " Successfully",
+        message:
+          "Fetched All Available Problems With The Search Query " +
+          req.body.ids +
+          " Successfully",
         data: problemsList,
       });
     } catch {
@@ -450,5 +489,5 @@ problemRouter.post(
         status: HttpStatusCode.InternalServerError,
       });
     }
-  }
+  },
 );
