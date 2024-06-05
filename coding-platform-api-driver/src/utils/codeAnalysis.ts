@@ -4,83 +4,80 @@ import { exec } from "child_process";
 import { pistonExecuteCodeApi } from "../pistonCodeExecutionApi.js";
 import { ResponseResult, PistonCodeExecutionResult } from "../types.js";
 
-export const saveToFile = (code: string, fileName: string): string => {
-  try {
-    console.log("code", code);
-    console.log("file", fileName);
+// export const saveToFile = (code: string, fileName: string): string => {
+//   try {
+//     console.log("code", code);
+//     console.log("file", fileName);
     
-    // Get the directory path of the current module
-    const currentDir = path.dirname(new URL(import.meta.url).pathname);
-    console.log("current", currentDir);
+//     // Get the directory path of the current module
+//     const currentDir = path.dirname(new URL(import.meta.url).pathname);
+//     console.log("current", currentDir);
 
-    // Construct the file path relative to the module directory
-    const filePath ="C:/Users/chehi/OneDrive/Bureau/code-exec-driver/coding-platform-api-driver/src/codeSubmissions/submittedCode.ts";
-    console.log("path", filePath);
+//     // Construct the file path relative to the module directory
+//     const filePath = path.join(currentDir, "..", "..", "src", "codeSubmissions", fileName);
+//     console.log("path", filePath);
 
-    console.log("filepath", filePath);
-    fs.writeFileSync(filePath, code);
+//     console.log("filepath", filePath);
+//     fs.writeFileSync(filePath, code);
     
-    return filePath;
-  } catch (error) {
-    console.error("Error saving file:", error);
-    throw error; 
-  }
-};
+//     return filePath;
+//   } catch (error) {
+//     console.error("Error saving file:", error);
+//     throw error; 
+//   }
+// };
 
-export const runCoverage = (code: string): Promise<string> => {
-  try {
-    console.log("codeaaaaaaaaa", code);
+// export const runCoverage = (code: string): Promise<string> => {
+//   try {
+//     console.log("codeaaaaaaaaa", code);
 
-    const codeFilePath = saveToFile(code, "submittedCode.ts");
-    console.log("wiw", codeFilePath);
+//     const codeFilePath = saveToFile(code, "submittedCode.ts");
+//     console.log("wiw", codeFilePath);
     
   
-    console.log("Before exec call");
-return new Promise((resolve, reject) => {
-  console.log("code", codeFilePath);
-  exec(`nyc --reporter=json mocha ${codeFilePath}`, (error, stdout, stderr) => {
-    console.log("Inside exec callback"); // Log to check if we reach this point
-    if (error) {
-      console.log("Error occurred:", error);
-      reject(stderr);
-      console.log("eeee", stderr);
-    } else {
-      console.log("Command executed successfully.");
-      resolve(stdout);
-      console.log("dffdfdf", stdout);
-    }
-  });
-})
-    
-  } catch (error) {
-    console.error("Error running code coverage:", error);
-    throw error; 
-  }
+//     return new Promise((resolve, reject) => {
+//       exec(`nyc --reporter=json mocha ${codeFilePath}`, (error, stdout, stderr) => {
+//         if (error) {
+//           reject(stderr);
+//           console.log("eeee", codeFilePath);
+//           console.log("kkkkk", codeFilePath);
+//         } else {
+//           resolve(stdout);
+//           console.log("vvvvv", codeFilePath);
+//           console.log("dffdfdf", stdout);
+//         }
+//       });
+//       console.log("bbbbb", codeFilePath);
+//     });
+//   } catch (error) {
+//     console.error("Error running code coverage:", error);
+//     throw error; 
+//   }
   
-};
+// };
 
-export const analyzeComplexity = (code: string): Promise<string> => {
-  try {
-    console.log("code", code);
+// export const analyzeComplexity = (code: string): Promise<string> => {
+//   try {
+//     console.log("code", code);
 
-    const codeFilePath = saveToFile(code, "submittedCode.ts");
-    console.log("aaaaaaaa", codeFilePath);
+//     const codeFilePath = saveToFile(code, "submittedCode.ts");
+//     console.log("aaaaaaaa", codeFilePath);
   
-    return new Promise((resolve, reject) => {
-      exec(`plato -r -d report ${codeFilePath}`, (error, stdout, stderr) => {
-        if (error) {
-          reject(stderr);
-        } else {
-          resolve(stdout);
-        }
-      });
-    });
-  } catch (error) {
-    console.error("Error analyzing complexity :", error);
-    throw error; 
-  }
+//     return new Promise((resolve, reject) => {
+//       exec(`plato -r -d report ${codeFilePath}`, (error, stdout, stderr) => {
+//         if (error) {
+//           reject(stderr);
+//         } else {
+//           resolve(stdout);
+//         }
+//       });
+//     });
+//   } catch (error) {
+//     console.error("Error analyzing complexity :", error);
+//     throw error; 
+//   }
   
-};
+// };
 
 export const executeCodeWithMetrics = async (mergedCode: string): Promise<any> => {
   const start = process.hrtime();
@@ -94,7 +91,7 @@ export const executeCodeWithMetrics = async (mergedCode: string): Promise<any> =
     return {
       codeSubmitResult: "exception",
       errorMessage: pistonExecutionResponse.message,
-      executionTime, // Include executionTime in the response
+      executionTime,
     };
   }
 
@@ -106,13 +103,13 @@ export const executeCodeWithMetrics = async (mergedCode: string): Promise<any> =
     result = {
       codeSubmitResult: "exception",
       errorMessage: pistonExecutionResponse.data.compile.stdout,
-      executionTime, 
+      executionTime,
     };
   } else if (runCode !== 0) {
     result = {
       codeSubmitResult: "exception",
       errorMessage: pistonExecutionResponse.data.run.stdout || "No Returned Value!",
-      executionTime, 
+      executionTime,
     };
   } else {
     try {
@@ -120,20 +117,16 @@ export const executeCodeWithMetrics = async (mergedCode: string): Promise<any> =
       result = {
         codeSubmitResult: "success",
         testCases: resultAsJson,
-        executionTime, 
+        executionTime,
       };
     } catch (e) {
       result = {
         codeSubmitResult: "exception",
         errorMessage: "Problem while executing your code",
-        executionTime, 
+        executionTime,
       };
     }
   }
-  
-  console.log(result);
 
   return result;
-  
 };
-
