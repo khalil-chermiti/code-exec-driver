@@ -19,7 +19,7 @@ export const pistonExecuteCodeApi = async (code: string): Promise<ResponseResult
       version: PISTON_JAVASCRIPT_CONFIG.version,
       files: [
         {
-          name: generateRandomFileName(".js"),
+          name: generateRandomFileName(".ts"),
           content: code,
         },
       ],
@@ -31,8 +31,8 @@ export const pistonExecuteCodeApi = async (code: string): Promise<ResponseResult
       status: HttpStatusCode.Ok,
       data: response.data,
     };
-  } catch(e) {
-    console.log(e)
+  } catch (e) {
+    console.log(e);
     return {
       success: false,
       message: "Code Execution Failed",

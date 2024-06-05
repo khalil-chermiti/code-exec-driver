@@ -5,6 +5,8 @@ import { API_ENDPOINTS } from "./config/apiEndpoints.js";
 import { JsCodeDriverFactory } from "./drivers/jsDriver.js";
 import { pistonExecuteCodeApi } from "./pistonCodeExecutionApi.js";
 import { CodeSubmitResult, ProblemViewModel, ResponseResult, TestCaseResult } from "./types.js";
+import { executeCodeWithMetrics, runCoverage, analyzeComplexity } from "./utils/codeAnalysis.js"; 
+
 
 export const problemRouter = express.Router();
 
@@ -98,30 +100,33 @@ problemRouter.get(API_ENDPOINTS.GET_PROBLEM, async (req: Request, res: Response<
     });
   }
 });
-("");
 
 problemRouter.post(
   API_ENDPOINTS.EXECUTE_CODE,
   async (req: Request, res: Response<ResponseResult<CodeSubmitResult>>) => {
     const problemId = req.body.problemId;
     const code = req.body.code;
-    if (!problemId || !code)
+    
+
+    if (!problemId || !code) {
       return res.status(HttpStatusCode.BadRequest).json({
         success: false,
         status: HttpStatusCode.BadRequest,
         message: "Please provide problem Id and code to execute",
       });
+    }
 
     let problem;
     try {
       problem = await ProblemModel.findById(problemId);
-      if (!problem)
+      if (!problem) {
         return res.status(HttpStatusCode.BadRequest).json({
           success: false,
           status: HttpStatusCode.BadRequest,
           message: "The Problem you are trying to fetch does not exist",
         });
-    } catch {
+      }
+    } catch (error) {
       return res.status(HttpStatusCode.InternalServerError).json({
         success: false,
         status: HttpStatusCode.InternalServerError,
@@ -129,56 +134,53 @@ problemRouter.post(
       });
     }
 
+
+
     const mergedCode = JsCodeDriverFactory(code, problem.driverCode)();
-    console.log(mergedCode);
-
-    const pistonExecutionResponse = await pistonExecuteCodeApi(mergedCode);
-
-    if (pistonExecutionResponse.success === false)
-      return res.status(HttpStatusCode.InternalServerError).json({
-        success: false,
-        message: pistonExecutionResponse.message,
-        status: HttpStatusCode.InternalServerError,
-      });
-
-    if (pistonExecutionResponse.data.compile.code !== 0) {
-      return res.status(200).json({
-        success: true,
-        status: HttpStatusCode.Ok,
-        message: "Code Execution Successfully Finished",
-        data: {
-          codeSubmitResult: "exception",
-          errorMessage: pistonExecutionResponse.data.compile.stdout,
-        },
-      });
-    }
-
-    if (pistonExecutionResponse.data.run.code !== 0) {
-      return res.status(200).json({
-        success: true,
-        status: HttpStatusCode.Ok,
-        message: "Code Execution Successfully Finished",
-        data: {
-          codeSubmitResult: "exception",
-          errorMessage: pistonExecutionResponse.data.run.stdout || "No Returned Value!",
-        },
-      });
-    }
 
     try {
-      const resultAsJson = JSON.parse(pistonExecutionResponse.data.run.stdout);
+      const performanceReport = await executeCodeWithMetrics(mergedCode);
 
-      return res.status(200).json({
+      if (performanceReport.codeSubmitResult === "exception") {
+        return res.status(HttpStatusCode.Ok).json({
+          success: true,
+          status: HttpStatusCode.Ok,
+          message: "Code Execution Successfully Finished",
+          data: performanceReport,
+        });
+      }
+      
+
+      // const coverageReport = await runCoverage(code);
+
+      // console.log("bbbbbbbb", coverageReport);
+
+      // const complexityReport = await analyzeComplexity(code);
+
+      // console.log("cccccccccc", complexityReport);
+      
+      
+
+      // const fullReport = {
+      //   performance: performanceReport,
+      //   coverage: JSON.parse(coverageReport),
+      //   complexity: JSON.parse(complexityReport),
+      // };
+
+      return res.status(HttpStatusCode.Ok).json({
         success: true,
         status: HttpStatusCode.Ok,
-        message: "Code Execution Successfully Finished",
+        message: "Code Execution and Analysis Successfully Finished",
         data: {
           codeSubmitResult: "success",
-          testCases: resultAsJson as TestCaseResult[],
+          testCases: performanceReport.testCases as TestCaseResult[],
+          performanceReport: performanceReport,
+          // coverageReport: JSON.parse(coverageReport),
+          // complexityReport: JSON.parse(complexityReport),
         },
       });
     } catch (e) {
-      return res.json({
+      return res.status(HttpStatusCode.InternalServerError).json({
         success: false,
         message: "Problem while executing your code",
         status: HttpStatusCode.InternalServerError,

@@ -43,11 +43,15 @@ export type CodeSubmitResult =
   | {
       codeSubmitResult: "success";
       testCases: TestCaseResult[];
+      // coverageReport: any; 
+      // complexityReport: any; 
+      performanceReport: any;
     }
   | {
       codeSubmitResult: "exception";
       errorMessage: string;
     };
+
 
 export type ProblemViewModel = {
   id: string;
