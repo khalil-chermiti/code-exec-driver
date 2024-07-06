@@ -18,6 +18,7 @@ export type PistonCodeExecutionResult = {
   };
 };
 
+
 type TestCaseFailed = {
   executionResult: "failed";
   input: string[];
@@ -43,8 +44,6 @@ export type CodeSubmitResult =
   | {
       codeSubmitResult: "success";
       testCases: TestCaseResult[];
-      // coverageReport: any; 
-      // complexityReport: any; 
       performanceReport: any;
     }
   | {

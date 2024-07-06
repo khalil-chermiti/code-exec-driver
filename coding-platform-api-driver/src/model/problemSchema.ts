@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 export type CodeTemplate = {
-  language: string;
   code: string;
 };
 
@@ -22,21 +21,19 @@ const problemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-
   description: {
     type: String,
     required: true,
   },
-
   code: {
     type: String,
     required: true,
   },
-
   driverCode: {
     type: String,
     required: true,
   },
+
 });
 
 export const ProblemModel = mongoose.model("problem", problemSchema);

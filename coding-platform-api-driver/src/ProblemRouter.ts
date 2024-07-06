@@ -4,7 +4,7 @@ import { ProblemModel } from "./model/problemSchema.js";
 import { API_ENDPOINTS } from "./config/apiEndpoints.js";
 import { JsCodeDriverFactory } from "./drivers/jsDriver.js";
 import { pistonExecuteCodeApi } from "./pistonCodeExecutionApi.js";
-import { executeCodeWithMetrics, runCoverage, analyzeComplexity } from "./utils/codeAnalysis.js"; 
+import { executeCodeWithMetrics } from "./utils/codeAnalysis.js"; 
 
 
 import {
@@ -87,6 +87,9 @@ problemRouter.get(
 
     try {
       const problem = await ProblemModel.findById(req.params.id);
+      
+      console.log("wiw", problem);
+      
 
       if (!problem)
         return res.status(HttpStatusCode.BadRequest).json({
@@ -121,11 +124,12 @@ problemRouter.get(
 problemRouter.post(
   API_ENDPOINTS.EXECUTE_CODE,
   async (req: Request, res: Response<ResponseResult<CodeSubmitResult>>) => {
-    const problemId = req.body.problemId;
-    const code = req.body.code;
-    
+    const { problemId, code } = req.body;
+
+    console.log("Request received with problemId:", problemId);
 
     if (!problemId || !code) {
+      console.log("Invalid request: Missing problemId or code");
       return res.status(HttpStatusCode.BadRequest).json({
         success: false,
         status: HttpStatusCode.BadRequest,
@@ -137,6 +141,7 @@ problemRouter.post(
     try {
       problem = await ProblemModel.findById(problemId);
       if (!problem) {
+        console.log("Problem not found with id:", problemId);
         return res.status(HttpStatusCode.BadRequest).json({
           success: false,
           status: HttpStatusCode.BadRequest,
@@ -144,6 +149,7 @@ problemRouter.post(
         });
       }
     } catch (error) {
+      console.error("Error finding problem:", error);
       return res.status(HttpStatusCode.InternalServerError).json({
         success: false,
         status: HttpStatusCode.InternalServerError,
@@ -151,12 +157,15 @@ problemRouter.post(
       });
     }
 
-
+    console.log("Problem found:", problem);
 
     const mergedCode = JsCodeDriverFactory(code, problem.driverCode)();
+    const input = {}; 
 
     try {
-      const performanceReport = await executeCodeWithMetrics(mergedCode);
+      const performanceReport = await executeCodeWithMetrics(mergedCode, input);
+
+      console.log("Performance Report:", JSON.stringify(performanceReport, null, 2));
 
       if (performanceReport.codeSubmitResult === "exception") {
         return res.status(HttpStatusCode.Ok).json({
@@ -167,23 +176,6 @@ problemRouter.post(
         });
       }
       
-
-      // const coverageReport = await runCoverage(code);
-
-      // console.log("bbbbbbbb", coverageReport);
-
-      // const complexityReport = await analyzeComplexity(code);
-
-      // console.log("cccccccccc", complexityReport);
-      
-      
-
-      // const fullReport = {
-      //   performance: performanceReport,
-      //   coverage: JSON.parse(coverageReport),
-      //   complexity: JSON.parse(complexityReport),
-      // };
-
       return res.status(HttpStatusCode.Ok).json({
         success: true,
         status: HttpStatusCode.Ok,
@@ -192,11 +184,10 @@ problemRouter.post(
           codeSubmitResult: "success",
           testCases: performanceReport.testCases as TestCaseResult[],
           performanceReport: performanceReport,
-          // coverageReport: JSON.parse(coverageReport),
-          // complexityReport: JSON.parse(complexityReport),
         },
       });
     } catch (e) {
+      console.error("Error executing code:", e);
       return res.status(HttpStatusCode.InternalServerError).json({
         success: false,
         message: "Problem while executing your code",
@@ -206,74 +197,101 @@ problemRouter.post(
   },
 );
 
+
+
+
 problemRouter.post(
   API_ENDPOINTS.TEST_PROBLEM,
   async (req: Request, res: Response<ResponseResult<CodeSubmitResult>>) => {
     const code = req.body.code;
     const driver = req.body.driver;
 
-    if (!code || !driver)
+    if (!code || !driver) {
       return res.status(HttpStatusCode.BadRequest).json({
         success: false,
         status: HttpStatusCode.BadRequest,
-        message: "Please provide code and code driver ",
+        message: "Please provide code and code driver",
       });
+    }
 
     const mergedCode = JsCodeDriverFactory(code, driver)();
-
-    const pistonExecutionResponse = await pistonExecuteCodeApi(mergedCode);
-
-    if (pistonExecutionResponse.success === false)
-      return res.status(HttpStatusCode.InternalServerError).json({
-        success: false,
-        message: pistonExecutionResponse.message,
-        status: HttpStatusCode.InternalServerError,
-      });
-
-    if (pistonExecutionResponse.data.compile.code !== 0) {
-      return res.status(200).json({
-        success: true,
-        status: HttpStatusCode.Ok,
-        message: "Code Execution Successfully Finished",
-        data: {
-          codeSubmitResult: "exception",
-          errorMessage: pistonExecutionResponse.data.compile.stdout,
-        },
-      });
-    }
-
-    if (pistonExecutionResponse.data.run.code !== 0) {
-      return res.status(200).json({
-        success: true,
-        status: HttpStatusCode.Ok,
-        message: "Code Execution Successfully Finished",
-        data: {
-          codeSubmitResult: "exception",
-          errorMessage:
-            pistonExecutionResponse.data.run.stdout || "No Returned Value!",
-        },
-      });
-    }
+    const input = {}; // Provide appropriate input here if necessary
 
     try {
-      const resultAsJson = JSON.parse(pistonExecutionResponse.data.run.stdout);
+      // Fetch problem details including language from ProblemModel
+      const problem = await ProblemModel.findById(req.body.problemId);
+      console.log("p", problem);
+      
 
-      return res.status(200).json({
-        success: true,
-        status: HttpStatusCode.Ok,
-        message: "Code Execution Successfully Finished",
-        data: {
-          codeSubmitResult: "success",
-          testCases: resultAsJson as TestCaseResult[],
-          performanceReport: "success",
-        },
-      });
-    } catch (e) {
-      return res.json({
+      if (!problem) {
+        return res.status(HttpStatusCode.BadRequest).json({
+          success: false,
+          status: HttpStatusCode.BadRequest,
+          message: "The Problem you are trying to fetch does not exist",
+        });
+      }
+
+      const pistonExecutionResponse = await pistonExecuteCodeApi(mergedCode, input);
+
+      if (!pistonExecutionResponse.success) {
+        return res.status(HttpStatusCode.InternalServerError).json({
+          success: false,
+          message: pistonExecutionResponse.message,
+          status: HttpStatusCode.InternalServerError,
+        });
+      }
+
+      if (pistonExecutionResponse.data.compile.code !== 0) {
+        return res.status(HttpStatusCode.Ok).json({
+          success: true,
+          status: HttpStatusCode.Ok,
+          message: "Code Execution Finished with Compilation Error",
+          data: {
+            codeSubmitResult: "exception",
+            errorMessage: pistonExecutionResponse.data.compile.stdout,
+          },
+        });
+      }
+
+      if (pistonExecutionResponse.data.run.code !== 0) {
+        return res.status(HttpStatusCode.Ok).json({
+          success: true,
+          status: HttpStatusCode.Ok,
+          message: "Code Execution Finished with Runtime Error",
+          data: {
+            codeSubmitResult: "exception",
+            errorMessage:
+              pistonExecutionResponse.data.run.stdout || "No Returned Value!",
+          },
+        });
+      }
+
+      try {
+        const resultAsJson = JSON.parse(pistonExecutionResponse.data.run.stdout);
+
+        return res.status(HttpStatusCode.Ok).json({
+          success: true,
+          status: HttpStatusCode.Ok,
+          message: "Code Execution Successfully Finished",
+          data: {
+            codeSubmitResult: "success",
+            testCases: resultAsJson as TestCaseResult[],
+            performanceReport: "success",
+          },
+        });
+      } catch (e) {
+        return res.status(HttpStatusCode.InternalServerError).json({
+          success: false,
+          message:
+            "STDOUT is not a valid JSON " +
+            pistonExecutionResponse.data.run.stdout,
+          status: HttpStatusCode.InternalServerError,
+        });
+      }
+    } catch (error) {
+      return res.status(HttpStatusCode.InternalServerError).json({
         success: false,
-        message:
-          "STDOUT is not a valid JSON " +
-          pistonExecutionResponse.data.run.stdout,
+        message: "Problem while executing your code",
         status: HttpStatusCode.InternalServerError,
       });
     }
@@ -321,6 +339,7 @@ problemRouter.put(
           code: req.body.code,
           description: req.body.description,
           driverCode: req.body.driverCode,
+          language: req.body.language,
         },
         {
           new: true,
