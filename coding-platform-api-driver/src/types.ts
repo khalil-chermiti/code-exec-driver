@@ -44,7 +44,10 @@ export type CodeSubmitResult =
   | {
       codeSubmitResult: "success";
       testCases: TestCaseResult[];
-      performanceReport: any;
+      performanceReport: {
+        complexity: string;
+        executionTime: number;
+      };
     }
   | {
       codeSubmitResult: "exception";

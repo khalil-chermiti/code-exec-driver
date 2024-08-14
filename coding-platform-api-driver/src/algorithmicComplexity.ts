@@ -2,7 +2,8 @@ import { pistonExecuteCodeApi } from "./pistonCodeExecutionApi.js";
 import { PistonCodeExecutionResult, ResponseResult } from "./types.js";
 import regression from "regression";
 
-const measureExecutionTime = async (
+// Function to measure execution time
+export const measureExecutionTime = async (
   code: string,
   input: any,
 ): Promise<number> => {
@@ -18,7 +19,7 @@ const measureExecutionTime = async (
     }
 
     const end = process.hrtime(start);
-    const executionTime = end[0] * 1000 + end[1] / 1000000;
+    const executionTime = end[0] * 1000 + end[1] / 1000000; // Convert to milliseconds
 
     return executionTime;
   } catch (error: unknown) {
@@ -27,6 +28,7 @@ const measureExecutionTime = async (
   }
 };
 
+// Function to generate input for testing
 const generateInput = (size: number): number[] => {
   try {
     return new Array(size).fill(0).map(() => Math.floor(Math.random() * size));
@@ -36,8 +38,8 @@ const generateInput = (size: number): number[] => {
   }
 };
 
+// Function to determine Big-O complexity based on input sizes and execution times
 const determineBigO = (inputSizes: number[], executionTimes: number[]): string => {
-  // Ensure input sizes and execution times are non-empty and of the same length
   if (inputSizes.length === 0 || executionTimes.length === 0 || inputSizes.length !== executionTimes.length) {
     throw new Error('Invalid input: inputSizes and executionTimes must be non-empty arrays of the same length.');
   }
@@ -58,18 +60,20 @@ const determineBigO = (inputSizes: number[], executionTimes: number[]): string =
   return 'O(n^k)';
 };
 
+// Function to estimate algorithmic complexity
 export const estimateAlgorithmicComplexity = async (mergedCode: string): Promise<{ inputSizes: number[], executionTimes: number[], complexity: string } | { error: true, message: string }> => {
   try {
     const inputSizes = [10, 100, 1000, 10000, 100000]; 
     const executionTimesPromises: Promise<number>[] = [];
 
-    // Measure execution times in parallel
+    // Measure execution times in parallel for each input size
     inputSizes.forEach(size => {
       const input = generateInput(size);
       const executionPromise = measureExecutionTime(mergedCode, input);
       executionTimesPromises.push(executionPromise);
     });
 
+    // Wait for all execution times to be measured
     const executionTimes = await Promise.all(executionTimesPromises);
     const complexity = determineBigO(inputSizes, executionTimes);
 
@@ -84,4 +88,3 @@ export const estimateAlgorithmicComplexity = async (mergedCode: string): Promise
     }
   }
 };
-

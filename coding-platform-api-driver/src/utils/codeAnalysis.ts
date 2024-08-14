@@ -38,15 +38,24 @@ export const executeCodeWithMetrics = async (mergedCode: string, input: any): Pr
     try {
       const resultAsJson = JSON.parse(pistonExecutionResponse.data.run.stdout);
       const algorithmicComplexity = await estimateAlgorithmicComplexity(mergedCode);
-      console.log("algorithmic Complexity:", JSON.stringify(algorithmicComplexity, null, 2));
+
+      let performanceReport: { complexity: string; executionTime: number } = {
+        complexity: '',
+        executionTime: executionTime,
+      };
+
+      if ('complexity' in algorithmicComplexity) {
+        performanceReport.complexity = algorithmicComplexity.complexity;
+      } else {
+        performanceReport.complexity = 'Unknown complexity due to error';
+      }
+
+      console.log("Performance Report:", performanceReport);
 
       result = {
         codeSubmitResult: 'success',
         testCases: resultAsJson,
-        executionTime,
-        performanceReport: {
-          complexity: algorithmicComplexity,
-        }
+        performanceReport
       };
     } catch (e) {
       if (e instanceof Error) {

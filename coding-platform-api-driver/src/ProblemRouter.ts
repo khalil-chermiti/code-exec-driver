@@ -14,6 +14,7 @@ import {
   TestCaseResult,
 } from "./types.js";
 import { isValidObjectId } from "mongoose";
+import { estimateAlgorithmicComplexity, measureExecutionTime } from "./algorithmicComplexity.js";
 
 export const problemRouter = express.Router();
 
@@ -220,9 +221,6 @@ problemRouter.post(
     try {
       // Fetch problem details including language from ProblemModel
       const problem = await ProblemModel.findById(req.body.problemId);
-      console.log("p", problem);
-      
-
       if (!problem) {
         return res.status(HttpStatusCode.BadRequest).json({
           success: false,
@@ -269,6 +267,26 @@ problemRouter.post(
       try {
         const resultAsJson = JSON.parse(pistonExecutionResponse.data.run.stdout);
 
+        const algorithmicComplexity = await estimateAlgorithmicComplexity(mergedCode);
+
+        const executionTime = await measureExecutionTime(mergedCode, input);
+
+
+        let performanceReport;
+
+        if ("complexity" in algorithmicComplexity) {
+          performanceReport = {
+            complexity: algorithmicComplexity.complexity,
+            executionTime: executionTime, 
+          };
+        } else {
+          performanceReport = {
+            complexity: "Complexity analysis failed",
+            executionTime: executionTime, // Still report the execution time if available
+          };
+          console.error("Complexity analysis error:", algorithmicComplexity.message);
+        }
+
         return res.status(HttpStatusCode.Ok).json({
           success: true,
           status: HttpStatusCode.Ok,
@@ -276,14 +294,14 @@ problemRouter.post(
           data: {
             codeSubmitResult: "success",
             testCases: resultAsJson as TestCaseResult[],
-            performanceReport: "success",
+            performanceReport: performanceReport,
           },
         });
       } catch (e) {
         return res.status(HttpStatusCode.InternalServerError).json({
           success: false,
           message:
-            "STDOUT is not a valid JSON " +
+            "STDOUT is not a valid JSON: " +
             pistonExecutionResponse.data.run.stdout,
           status: HttpStatusCode.InternalServerError,
         });
@@ -515,3 +533,4 @@ problemRouter.post(
     }
   },
 );
+
